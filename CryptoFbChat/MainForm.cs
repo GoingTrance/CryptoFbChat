@@ -1,6 +1,8 @@
 ﻿using Facebook;
 using NAudio.Wave;
 using NAudioDemo.NetworkChatDemo;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +27,8 @@ namespace CryptoFbChat
         private UdpClient udpListener;
         private INetworkChatCodec selectedCodec;
         private volatile bool connected = false;
+        private string myAccessToken;
+        private string myFbID;
         private RijndaelManaged myRijndael = new RijndaelManaged();
         private Int64 fbAppId = 1404447426539494;
         string redirectFbPath = "https://apps.facebook.com/nurecryptochat";
@@ -57,6 +61,37 @@ namespace CryptoFbChat
 
             Uri loginUri = fb.GetLoginUrl(query);
             webBrowser1.Navigate(loginUri);
+        }
+
+        private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
+        {
+            var fb = new FacebookClient();
+            FacebookOAuthResult oauthResult;
+
+            if (fb.TryParseOAuthCallbackUrl(e.Url, out oauthResult))
+            {
+                if (oauthResult.IsSuccess)
+                    myAccessToken = oauthResult.AccessToken;
+
+                if (myAccessToken != null)
+                {
+                    fb.AccessToken = myAccessToken;
+
+                    var result = fb.Get("me") as IDictionary<string, object>;
+                    label6.Text = result["name"].ToString();
+                    label5.Visible = true;
+                    label6.Visible = true;
+                    this.Width = 590;
+                    myFbID = result["id"].ToString();
+                }
+                else
+                {
+                    MessageBox.Show("Couldn't log into Facebook!", "Login unsuccessful", MessageBoxButtons.OK,
+                                    MessageBoxIcon.Error);
+                }
+                webBrowser1.Stop();
+                webBrowser1.Hide();
+            }
         }
 
         void OnFormDisposed(object sender, EventArgs e)
@@ -105,7 +140,158 @@ namespace CryptoFbChat
                 comboBoxInputDevices.SelectedIndex = 0;
             }
         }
-        
+
+        private void buttonStartStreaming_Click(object sender, EventArgs e)
+        {
+            // Utilities.Web.WebBrowserHelper.WebBrowserHelper.ClearCache();
+            if (!connected)
+            {
+                #region Preparing
+                // Check group access
+                var fb = new FacebookClient();
+                fb.AccessToken = myAccessToken;
+                var fbGroupMembersResponse = fb.Get(textBoxGroupID.Text + "/members") as IDictionary<string, object>;
+                var fbGroupMembersResponseData = fbGroupMembersResponse["data"].ToString();
+                var membersList = JsonConvert.DeserializeObject<List<IDictionary<string, object>>>(fbGroupMembersResponseData);
+                var fbMember = membersList.FirstOrDefault(x => x["id"].ToString() == myFbID);
+                if (fbMember == null)
+                {
+                    MessageBox.Show("You have not any access to this group!");
+                    return;
+                }
+
+                foreach (var item in membersList)
+                {
+                    listBoxMembers.Items.Add(item["name"].ToString());
+                }
+
+                var isAdmin = (bool)fbMember["administrator"];
+
+                // Get the table ip addresses of group members
+
+                // Get my external ip
+                string myExtIp = new System.Net.WebClient().DownloadString("http://bot.whatismyipaddress.com");
+
+                // Get public key to encrypt token
+                HttpWebRequest getPublicKeyRequest = (HttpWebRequest)WebRequest.Create("http://cryptochatservice.apphb.com/");
+                var getPublicKeyResponse = getPublicKeyRequest.GetResponse();
+                var rsa = new RSACryptoServiceProvider();
+                var rawJson = new StreamReader(getPublicKeyResponse.GetResponseStream()).ReadToEnd();
+                var json = JObject.Parse(rawJson);
+                RSAParameters rsaParam = json.ToObject<RSAParameters>();
+                rsa.ImportParameters(rsaParam);
+
+                // Encrypt my token by parts
+                int partLen = 8;
+                int partCount = myAccessToken.Length / partLen;
+                if (myAccessToken.Length % partLen > 0)
+                    partCount++;
+
+                byte[] listPartByte = new byte[partCount * 128];
+                for (int i = 0; i < partCount; i++)
+                {
+                    string partStr = myAccessToken.Substring(i * partLen, (i + 1) * partLen < myAccessToken.Length ? partLen : myAccessToken.Length - i * partLen);
+                    byte[] encryptedPartStr = rsa.Encrypt(Encoding.ASCII.GetBytes(partStr), true);
+                    encryptedPartStr.CopyTo(listPartByte, i * 128);
+                }
+
+                // Send listPartByte (encrypted token) and ip to get the mapping table
+                getPublicKeyRequest = (HttpWebRequest)WebRequest.Create(string.Format("http://cryptochatservice.apphb.com//Home//Connect"));
+                getPublicKeyRequest.Method = "POST";
+
+                BinaryFormatter serializer = new BinaryFormatter();
+
+                using (var pushReqStream = getPublicKeyRequest.GetRequestStream())
+                {
+                    serializer.Serialize(pushReqStream, listPartByte);
+                    serializer.Serialize(pushReqStream, textBoxGroupID.Text);
+                    serializer.Serialize(pushReqStream, myExtIp);
+                }
+
+                getPublicKeyResponse = getPublicKeyRequest.GetResponse();
+
+                var streamResp = getPublicKeyResponse.GetResponseStream();
+                Dictionary<string, string> mappings = (Dictionary<string, string>)serializer.Deserialize(streamResp);
+                streamResp.Close();
+
+                #endregion
+
+                //-------------------------
+                // Now you have a table with needed ips, know if you are admin or not.
+                //-------------------------                
+
+                List<IPEndPoint> allMembers = new List<IPEndPoint>();
+                foreach (var item in mappings)
+                {
+                    if (item.Key != myFbID)
+                        allMembers.Add(new IPEndPoint(IPAddress.Parse(item.Value), 7080));
+                }
+
+                if (isAdmin)
+                {
+                    myRijndael.GenerateKey();
+                    myRijndael.GenerateIV();
+                }
+
+                RSAParameters myouParams = myouRSA.ExportParameters(false);
+
+                // Give or get the AES key
+
+                if (!isAdmin)
+                {
+                    // Connect to admin and get key
+                    var adminFbId = membersList.First(x => (bool)x["administrator"] == true)["id"];
+                    var adminIpEndPoint = new IPEndPoint(IPAddress.Parse(mappings.First(x => x.Key == (string)adminFbId).Value), 7080);
+
+                    TcpClient tcpConnection2 = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
+                    tcpConnection2.Connect(adminIpEndPoint);
+                    var stream = tcpConnection2.GetStream();
+
+                    serializer.Serialize(stream, myouParams);
+                    byte[] youBytes = new byte[128];
+                    stream.Read(youBytes, 0, 128);
+                    myRijndael.Key = myouRSA.Decrypt(youBytes, true);
+                    tcpConnection2.Close();
+                }
+                else
+                {
+                    // Connect to all members and give key
+                    Thread[] threads = new Thread[allMembers.Count];
+                    for (int i = 0; i < allMembers.Count; i++)
+                    {
+                        threads[i] = new Thread(GiveAESKeyAsync);
+                        threadMappings.Add(threads[i].ManagedThreadId, allMembers[i]);
+                        threads[i].Start();
+                    }
+
+                    for (int i = 0; i < threads.Length; i++)
+                        threads[i].Join();
+                }
+
+                inputDeviceNumber = comboBoxInputDevices.SelectedIndex;
+                selectedCodec = ((CodecComboItem)comboBoxCodecs.SelectedItem).Codec;
+
+                for (int i = 0; i < allMembers.Count; i++)
+                {
+                    Thread connectToMemberAsync = new Thread(ConnectOneMemberAsync);
+                    threadMappings.Add(connectToMemberAsync.ManagedThreadId, allMembers[i]);
+                    connectToMemberAsync.Start();
+                }
+
+                buttonStartStreaming.Text = "Disconnect";
+                label7.Visible = true;
+                listBoxMembers.Visible = true;
+            }
+            else
+            {
+                Disconnect();
+                buttonStartStreaming.Text = "Connect";
+                label7.Visible = true;
+                listBoxMembers.Items.Clear();
+                listBoxMembers.Visible = true;
+            }
+        }
+
         private void GiveAESKeyAsync()
         {
             int port = 7081;
