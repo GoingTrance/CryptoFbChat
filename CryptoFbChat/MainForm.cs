@@ -218,7 +218,7 @@ namespace CryptoFbChat
 
                 //-------------------------
                 // Now you have a table with needed ips, know if you are admin or not.
-                //-------------------------                
+                //-------------------------
 
                 List<IPEndPoint> allMembers = new List<IPEndPoint>();
                 foreach (var item in mappings)
@@ -243,29 +243,43 @@ namespace CryptoFbChat
                     var adminFbId = membersList.First(x => (bool)x["administrator"] == true)["id"];
                     var adminIpEndPoint = new IPEndPoint(IPAddress.Parse(mappings.First(x => x.Key == (string)adminFbId).Value), 7080);
 
-                    TcpClient tcpConnection2 = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
-                    tcpConnection2.Connect(adminIpEndPoint);
-                    var stream = tcpConnection2.GetStream();
+                    TcpClient connectionToAdmin = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
+                    connectionToAdmin.Connect(adminIpEndPoint);
+                    var stream = connectionToAdmin.GetStream();
 
                     serializer.Serialize(stream, myouParams);
                     byte[] youBytes = new byte[128];
                     stream.Read(youBytes, 0, 128);
                     myRijndael.Key = myouRSA.Decrypt(youBytes, true);
-                    tcpConnection2.Close();
+                    connectionToAdmin.Close();
                 }
                 else
                 {
-                    // Connect to all members and give key
-                    Thread[] threads = new Thread[allMembers.Count];
+                    // Listen to all members and give key
+                    TcpListener tt = new TcpListener(IPAddress.Parse(myLocalIp), 7080);
                     for (int i = 0; i < allMembers.Count; i++)
                     {
-                        threads[i] = new Thread(GiveAESKeyAsync);
-                        threadMappings.Add(threads[i].ManagedThreadId, allMembers[i]);
-                        threads[i].Start();
+                        TcpClient remoteClient = tt.AcceptTcpClient();
+                        var stream = remoteClient.GetStream();
+                        RSAParameters remoteParams = (RSAParameters)serializer.Deserialize(stream);
+                        myouRSA.ImportParameters(remoteParams);
+                        byte[] encryptedByRsaAesKey = myouRSA.Encrypt(myRijndael.Key, true);
+                        remoteClient.Client.Send(encryptedByRsaAesKey);
+                        remoteClient.Close();
                     }
 
-                    for (int i = 0; i < threads.Length; i++)
-                        threads[i].Join();
+                    tt.Stop();
+
+                    //Thread[] threads = new Thread[allMembers.Count];
+                    //for (int i = 0; i < allMembers.Count; i++)
+                    //{
+                    //    threads[i] = new Thread(GiveAESKeyAsync);
+                    //    threadMappings.Add(threads[i].ManagedThreadId, allMembers[i]);
+                    //    threads[i].Start();
+                    //}
+
+                    //for (int i = 0; i < threads.Length; i++)
+                    //    threads[i].Join();
                 }
 
                 inputDeviceNumber = comboBoxInputDevices.SelectedIndex;
@@ -292,23 +306,20 @@ namespace CryptoFbChat
             }
         }
 
-        private void GiveAESKeyAsync()
-        {
-            int port = 7081;
-            if (threadMappings[Thread.CurrentThread.ManagedThreadId].ToString().StartsWith("109"))
-                port = 7082;
-            TcpClient tcpConnection = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), port));
-            tcpConnection.Connect(threadMappings[Thread.CurrentThread.ManagedThreadId]);
-            var stream = tcpConnection.GetStream();
+        //private void GiveAESKeyAsync()
+        //{
+        //    TcpClient tcpConnection = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
+        //    tcpConnection.Connect(threadMappings[Thread.CurrentThread.ManagedThreadId]);
+        //    var stream = tcpConnection.GetStream();
 
-            BinaryFormatter serializer = new BinaryFormatter();
-            RSAParameters myouParams = (RSAParameters)serializer.Deserialize(stream);
-            myouRSA.ImportParameters(myouParams);
-            byte[] encryptedByRsaAesKey = myouRSA.Encrypt(myRijndael.Key, true);
-            tcpConnection.Client.Send(encryptedByRsaAesKey);
-            tcpConnection.Close();
-            threadMappings.Remove(Thread.CurrentThread.ManagedThreadId);
-        }
+        //    BinaryFormatter serializer = new BinaryFormatter();
+        //    RSAParameters myouParams = (RSAParameters)serializer.Deserialize(stream);
+        //    myouRSA.ImportParameters(myouParams);
+        //    byte[] encryptedByRsaAesKey = myouRSA.Encrypt(myRijndael.Key, true);
+        //    tcpConnection.Client.Send(encryptedByRsaAesKey);
+        //    tcpConnection.Close();
+        //    threadMappings.Remove(Thread.CurrentThread.ManagedThreadId);
+        //}
 
         private void ConnectOneMemberAsync()
         {
