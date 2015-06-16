@@ -40,6 +40,7 @@
             this.buttonStartStreaming = new System.Windows.Forms.Button();
             this.comboBoxCodecs = new System.Windows.Forms.ComboBox();
             this.comboBoxInputDevices = new System.Windows.Forms.ComboBox();
+            this.bufferIndicator = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // listBoxMembers
@@ -158,11 +159,20 @@
             this.comboBoxInputDevices.Size = new System.Drawing.Size(242, 21);
             this.comboBoxInputDevices.TabIndex = 28;
             // 
+            // bufferIndicator
+            // 
+            this.bufferIndicator.Location = new System.Drawing.Point(50, 285);
+            this.bufferIndicator.Name = "bufferIndicator";
+            this.bufferIndicator.Size = new System.Drawing.Size(258, 23);
+            this.bufferIndicator.TabIndex = 40;
+            this.bufferIndicator.Visible = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(444, 333);
+            this.Controls.Add(this.bufferIndicator);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
             this.Controls.Add(this.label9);
@@ -200,6 +210,7 @@
         private System.Windows.Forms.Button buttonStartStreaming;
         private System.Windows.Forms.ComboBox comboBoxCodecs;
         private System.Windows.Forms.ComboBox comboBoxInputDevices;
+        private System.Windows.Forms.ProgressBar bufferIndicator;
     }
 }
 
