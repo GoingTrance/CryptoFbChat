@@ -1,6 +1,5 @@
 ﻿using Facebook;
 using NAudio.Wave;
-using NAudioDemo.AudioPlaybackDemo;
 using NAudioDemo.NetworkChatDemo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,9 +19,6 @@ namespace CryptoFbChat
 {
     public partial class MainForm : Form
     {
-        private string fileName = null;
-        private AudioFileReader audioFileReader;
-
         private string myLocalIp;
         private WaveInEvent waveIn;
         private IWavePlayer waveOut;
@@ -52,17 +48,6 @@ namespace CryptoFbChat
             Disposed += OnFormDisposed;
             startFbLogin();
             listBoxMembers.Items.Clear();
-        }
-
-        private void LoadOutputDevicePlugins(IEnumerable<IOutputDevicePlugin> outputDevicePlugins)
-        {
-            comboBoxOutputDevice.DisplayMember = "Name";
-            comboBoxOutputDevice.SelectedIndexChanged += comboBoxOutputDevice_SelectedIndexChanged;
-            foreach (var outputDevicePlugin in outputDevicePlugins.OrderBy(p => p.Priority))
-            {
-                comboBoxOutputDevice.Items.Add(outputDevicePlugin);
-            }
-            comboBoxOutputDevice.SelectedIndex = 0;
         }
 
         public string GetLocalIPAddress()
@@ -174,30 +159,6 @@ namespace CryptoFbChat
             }
         }
 
-        private void CreateWaveOut()
-        {
-            var latency = 300;
-            waveOut = SelectedOutputDevicePlugin.CreateDevice(latency);
-            waveOut.PlaybackStopped += OnPlaybackStopped;
-        }
-
-        private IOutputDevicePlugin SelectedOutputDevicePlugin
-        {
-            get { return (IOutputDevicePlugin)comboBoxOutputDevice.SelectedItem; }
-        }
-
-        private ISampleProvider CreateInputStream(string fileName)
-        {            
-            this.audioFileReader = new AudioFileReader(fileName);
-
-            var sampleChannel = new SampleChannel(audioFileReader, true);
-            sampleChannel.PreVolumeMeter += OnPreVolumeMeter;
-            this.setVolumeDelegate = (vol) => sampleChannel.Volume = vol;
-            var postVolumeMeter = new MeteringSampleProvider(sampleChannel);
-
-            return postVolumeMeter;
-        }
-
         private void buttonStartStreaming_Click(object sender, EventArgs e)
         {
             listBoxMembers.Visible = true;
@@ -207,36 +168,7 @@ namespace CryptoFbChat
             {
                 #region Preparing
                 bufferIndicator.Visible = true;
-                audioStreamWave.Visible = true;
-
-                if (waveOut != null)
-                {
-                    if (waveOut.PlaybackState == PlaybackState.Playing)
-                    {
-                        return;
-                    }
-                    else if (waveOut.PlaybackState == PlaybackState.Paused)
-                    {
-                        waveOut.Play();
-                        groupBoxDriverModel.Enabled = false;
-                        return;
-                    }
-                }
-
-                CreateWaveOut();
-
-                ISampleProvider sampleProvider = null;
-                sampleProvider = CreateInputStream(fileName);
-                waveOut.Init(sampleProvider);
-                waveOut.Play();
-
-
-
-
-
-
-
-                return;
+             
                 // Check group access
                 var fb = new FacebookClient();
                 fb.AccessToken = myAccessToken;
