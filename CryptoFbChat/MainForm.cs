@@ -19,11 +19,12 @@ namespace CryptoFbChat
 {
     public partial class MainForm : Form
     {
-        private string myLocalIp = "192.168.1.2";
+        private string myLocalIp = "192.168.1.3";
         private WaveInEvent waveIn;
         private IWavePlayer waveOut;
         private BufferedWaveProvider waveProvider;
-        private UdpClient udpSender;
+        private UdpClient[] senders;
+        //private UdpClient udpSender;
         private UdpClient udpListener;
         private INetworkChatCodec selectedCodec;
         private volatile bool connected = false;
@@ -170,7 +171,7 @@ namespace CryptoFbChat
                 // Get the table ip addresses of group members
 
                 // Get my external ip
-                string myExtIp = new System.Net.WebClient().DownloadString("http://bot.whatismyipaddress.com");
+                string myExtIp = myLocalIp;//new System.Net.WebClient().DownloadString("http://bot.whatismyipaddress.com");
 
                 // Get public key to encrypt token
                 HttpWebRequest getPublicKeyRequest = (HttpWebRequest)WebRequest.Create("http://cryptochatservice.apphb.com/");
@@ -257,6 +258,7 @@ namespace CryptoFbChat
                 {
                     // Listen to all members and give key
                     TcpListener tt = new TcpListener(IPAddress.Parse(myLocalIp), 7080);
+                    tt.Start();
                     for (int i = 0; i < allMembers.Count; i++)
                     {
                         TcpClient remoteClient = tt.AcceptTcpClient();
@@ -268,29 +270,46 @@ namespace CryptoFbChat
                         remoteClient.Close();
                     }
 
-                    tt.Stop();
-
-                    //Thread[] threads = new Thread[allMembers.Count];
-                    //for (int i = 0; i < allMembers.Count; i++)
-                    //{
-                    //    threads[i] = new Thread(GiveAESKeyAsync);
-                    //    threadMappings.Add(threads[i].ManagedThreadId, allMembers[i]);
-                    //    threads[i].Start();
-                    //}
-
-                    //for (int i = 0; i < threads.Length; i++)
-                    //    threads[i].Join();
+                    tt.Stop();                    
                 }
 
                 inputDeviceNumber = comboBoxInputDevices.SelectedIndex;
                 selectedCodec = ((CodecComboItem)comboBoxCodecs.SelectedItem).Codec;
 
+                waveIn = new WaveInEvent();
+                waveIn.BufferMilliseconds = 50;
+                waveIn.DeviceNumber = inputDeviceNumber;
+                if (selectedCodec != null)
+                    waveIn.WaveFormat = selectedCodec.RecordFormat;
+                else
+                    waveIn.WaveFormat = new WaveFormat(8000, 16, 1);
+                waveIn.DataAvailable += waveIn_DataAvailable;
+                waveIn.StartRecording();
+
+                udpListener = new UdpClient();
+                udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udpListener.Client.Bind(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
+
+                senders = new UdpClient[allMembers.Count];
+                connected = true;
+
                 for (int i = 0; i < allMembers.Count; i++)
                 {
-                    Thread connectToMemberAsync = new Thread(ConnectOneMemberAsync);
-                    threadMappings.Add(connectToMemberAsync.ManagedThreadId, allMembers[i]);
-                    connectToMemberAsync.Start();
-                }
+                    senders[i] = new UdpClient();
+                    senders[i].Connect(allMembers[i]);
+
+                    //Thread connectToMemberAsync = new Thread(ConnectOneMemberAsync);
+                    //threadMappings.Add(connectToMemberAsync.ManagedThreadId, allMembers[i]);
+                    //connectToMemberAsync.Start();
+
+                    var state = new ListenerThreadState { Codec = selectedCodec, EndPoint = allMembers[i] };
+                    ThreadPool.QueueUserWorkItem(ListenerThread, state);
+                }                
+
+                waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
+                waveProvider = new BufferedWaveProvider(waveIn.WaveFormat);
+                waveOut.Init(waveProvider);
+                waveOut.Play();
 
                 buttonStartStreaming.Text = "Disconnect";
                 label7.Visible = true;
@@ -304,57 +323,30 @@ namespace CryptoFbChat
                 listBoxMembers.Items.Clear();
                 listBoxMembers.Visible = true;
             }
-        }
-
-        //private void GiveAESKeyAsync()
-        //{
-        //    TcpClient tcpConnection = new TcpClient(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
-        //    tcpConnection.Connect(threadMappings[Thread.CurrentThread.ManagedThreadId]);
-        //    var stream = tcpConnection.GetStream();
-
-        //    BinaryFormatter serializer = new BinaryFormatter();
-        //    RSAParameters myouParams = (RSAParameters)serializer.Deserialize(stream);
-        //    myouRSA.ImportParameters(myouParams);
-        //    byte[] encryptedByRsaAesKey = myouRSA.Encrypt(myRijndael.Key, true);
-        //    tcpConnection.Client.Send(encryptedByRsaAesKey);
-        //    tcpConnection.Close();
-        //    threadMappings.Remove(Thread.CurrentThread.ManagedThreadId);
-        //}
+        }        
 
         private void ConnectOneMemberAsync()
         {
             IPEndPoint currentMemberIp = threadMappings[Thread.CurrentThread.ManagedThreadId];
-            Connect(currentMemberIp, inputDeviceNumber, selectedCodec);
+            Connect(currentMemberIp, selectedCodec);
         }
 
-        private void Connect(IPEndPoint endPoint, int inputDeviceNumber, INetworkChatCodec codec)
+        private void Connect(IPEndPoint endPoint, INetworkChatCodec codec)
         {
-            waveIn = new WaveInEvent();
-            waveIn.BufferMilliseconds = 50;
-            waveIn.DeviceNumber = inputDeviceNumber;
-            if (codec != null)
-                waveIn.WaveFormat = codec.RecordFormat;
-            else
-                waveIn.WaveFormat = new WaveFormat(8000, 16, 1);
-            waveIn.DataAvailable += waveIn_DataAvailable;
-            waveIn.StartRecording();
+            //udpListener.Receive(ref endPoint);
 
-            udpSender = new UdpClient();
-            udpListener = new UdpClient();
+            //udpSender = new UdpClient();
+            //udpSender.Connect(endPoint);
 
-            udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpListener.Client.Bind(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
+            
 
-            udpSender.Connect(endPoint);
+            
+        }
 
-            waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
-            waveProvider = new BufferedWaveProvider(waveIn.WaveFormat);
-            waveOut.Init(waveProvider);
-            waveOut.Play();
+        private void StartReceiving(IPEndPoint endPoint)
+        {
+            udpListener.Receive(ref endPoint);
 
-            connected = true;
-            var state = new ListenerThreadState { Codec = codec, EndPoint = endPoint };
-            ThreadPool.QueueUserWorkItem(ListenerThread, state);
         }
 
         private void Disconnect()
@@ -366,7 +358,11 @@ namespace CryptoFbChat
                 waveIn.StopRecording();
                 waveOut.Stop();
 
-                udpSender.Close();
+                for (int i = 0; i < senders.Count(); i++)
+                {
+                    senders[i].Close();
+                }
+
                 udpListener.Close();
                 waveIn.Dispose();
                 waveOut.Dispose();
@@ -478,7 +474,10 @@ namespace CryptoFbChat
             string s = Encoding.Unicode.GetString(encoded);
             byte[] encrypted = EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
 
-            udpSender.Send(encrypted, encrypted.Count());
+            for (int i = 0; i < senders.Count(); i++)
+            {
+                senders[i].Send(encrypted, encrypted.Count());
+            }
         }
     }
 }

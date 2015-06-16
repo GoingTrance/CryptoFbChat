@@ -84,7 +84,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label6.Location = new System.Drawing.Point(23, 46);
+            this.label6.Location = new System.Drawing.Point(37, 46);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(74, 19);
             this.label6.TabIndex = 35;
@@ -95,7 +95,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label5.Location = new System.Drawing.Point(5, 16);
+            this.label5.Location = new System.Drawing.Point(19, 16);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(131, 19);
             this.label5.TabIndex = 34;
@@ -104,17 +104,18 @@
             // 
             // webBrowser1
             // 
-            this.webBrowser1.Location = new System.Drawing.Point(-6, 16);
+            this.webBrowser1.Location = new System.Drawing.Point(9, 12);
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
             this.webBrowser1.ScrollBarsEnabled = false;
             this.webBrowser1.Size = new System.Drawing.Size(337, 229);
             this.webBrowser1.TabIndex = 33;
+            this.webBrowser1.Navigated += new System.Windows.Forms.WebBrowserNavigatedEventHandler(this.webBrowser1_Navigated);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(-8, 107);
+            this.label4.Location = new System.Drawing.Point(6, 107);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(67, 13);
             this.label4.TabIndex = 32;
@@ -123,7 +124,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(-8, 80);
+            this.label3.Location = new System.Drawing.Point(6, 80);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(71, 13);
             this.label3.TabIndex = 31;
@@ -131,18 +132,19 @@
             // 
             // buttonStartStreaming
             // 
-            this.buttonStartStreaming.Location = new System.Drawing.Point(39, 149);
+            this.buttonStartStreaming.Location = new System.Drawing.Point(53, 149);
             this.buttonStartStreaming.Name = "buttonStartStreaming";
             this.buttonStartStreaming.Size = new System.Drawing.Size(129, 23);
             this.buttonStartStreaming.TabIndex = 30;
             this.buttonStartStreaming.Text = "Start Streaming";
             this.buttonStartStreaming.UseVisualStyleBackColor = true;
+            this.buttonStartStreaming.Click += new System.EventHandler(this.buttonStartStreaming_Click);
             // 
             // comboBoxCodecs
             // 
             this.comboBoxCodecs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxCodecs.FormattingEnabled = true;
-            this.comboBoxCodecs.Location = new System.Drawing.Point(69, 104);
+            this.comboBoxCodecs.Location = new System.Drawing.Point(83, 104);
             this.comboBoxCodecs.Name = "comboBoxCodecs";
             this.comboBoxCodecs.Size = new System.Drawing.Size(242, 21);
             this.comboBoxCodecs.TabIndex = 29;
@@ -151,7 +153,7 @@
             // 
             this.comboBoxInputDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxInputDevices.FormattingEnabled = true;
-            this.comboBoxInputDevices.Location = new System.Drawing.Point(69, 77);
+            this.comboBoxInputDevices.Location = new System.Drawing.Point(83, 77);
             this.comboBoxInputDevices.Name = "comboBoxInputDevices";
             this.comboBoxInputDevices.Size = new System.Drawing.Size(242, 21);
             this.comboBoxInputDevices.TabIndex = 28;
@@ -160,7 +162,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(510, 278);
+            this.ClientSize = new System.Drawing.Size(503, 279);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
             this.Controls.Add(this.label9);
