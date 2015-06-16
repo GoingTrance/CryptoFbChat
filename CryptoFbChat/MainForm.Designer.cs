@@ -45,7 +45,7 @@
             // listBoxMembers
             // 
             this.listBoxMembers.FormattingEnabled = true;
-            this.listBoxMembers.Location = new System.Drawing.Point(363, 135);
+            this.listBoxMembers.Location = new System.Drawing.Point(446, 135);
             this.listBoxMembers.Name = "listBoxMembers";
             this.listBoxMembers.Size = new System.Drawing.Size(120, 95);
             this.listBoxMembers.TabIndex = 39;
@@ -53,7 +53,7 @@
             // 
             // textBoxGroupID
             // 
-            this.textBoxGroupID.Location = new System.Drawing.Point(367, 54);
+            this.textBoxGroupID.Location = new System.Drawing.Point(450, 54);
             this.textBoxGroupID.Name = "textBoxGroupID";
             this.textBoxGroupID.Size = new System.Drawing.Size(108, 20);
             this.textBoxGroupID.TabIndex = 38;
@@ -63,7 +63,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label9.Location = new System.Drawing.Point(382, 16);
+            this.label9.Location = new System.Drawing.Point(465, 16);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(73, 19);
             this.label9.TabIndex = 37;
@@ -73,7 +73,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label7.Location = new System.Drawing.Point(382, 105);
+            this.label7.Location = new System.Drawing.Point(465, 105);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(79, 19);
             this.label7.TabIndex = 36;
@@ -84,7 +84,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label6.Location = new System.Drawing.Point(37, 46);
+            this.label6.Location = new System.Drawing.Point(19, 46);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(74, 19);
             this.label6.TabIndex = 35;
@@ -108,7 +108,7 @@
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
             this.webBrowser1.ScrollBarsEnabled = false;
-            this.webBrowser1.Size = new System.Drawing.Size(337, 255);
+            this.webBrowser1.Size = new System.Drawing.Size(422, 310);
             this.webBrowser1.TabIndex = 33;
             this.webBrowser1.Navigated += new System.Windows.Forms.WebBrowserNavigatedEventHandler(this.webBrowser1_Navigated);
             // 
@@ -162,7 +162,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(361, 279);
+            this.ClientSize = new System.Drawing.Size(444, 333);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
             this.Controls.Add(this.label9);
@@ -175,7 +175,11 @@
             this.Controls.Add(this.buttonStartStreaming);
             this.Controls.Add(this.comboBoxCodecs);
             this.Controls.Add(this.comboBoxInputDevices);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MainForm";
+            this.ShowIcon = false;
             this.Text = "CryptoFbChat";
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -19,18 +19,17 @@ namespace CryptoFbChat
 {
     public partial class MainForm : Form
     {
-        private string myLocalIp = "192.168.1.3";
+        private string myLocalIp;
         private WaveInEvent waveIn;
         private IWavePlayer waveOut;
         private BufferedWaveProvider waveProvider;
         private UdpClient[] senders;
-        //private UdpClient udpSender;
         private UdpClient udpListener;
         private INetworkChatCodec selectedCodec;
         private volatile bool connected = false;
         private string myAccessToken;
         private string myFbID;
-        private RijndaelManaged myRijndael = new RijndaelManaged();
+        private AesCryptoServiceProvider myRijndael = new AesCryptoServiceProvider();
         private Int64 fbAppId = 1404447426539494;
         string redirectFbPath = "https://apps.facebook.com/nurecryptochat";
         Dictionary<int, IPEndPoint> threadMappings = new Dictionary<int, IPEndPoint>();
@@ -41,7 +40,7 @@ namespace CryptoFbChat
         {
             InitializeComponent();
             PopulateInputDevicesCombo();
-
+            myLocalIp = GetLocalIPAddress();
             List<INetworkChatCodec> codecs = new List<INetworkChatCodec>();
             codecs.Add(new ALawChatCodec());
             codecs.Add(new MuLawChatCodec());
@@ -49,6 +48,24 @@ namespace CryptoFbChat
             Disposed += OnFormDisposed;
             startFbLogin();
             listBoxMembers.Items.Clear();
+        }
+
+        public string GetLocalIPAddress()
+        {
+            IPHostEntry host;
+            string localIP = "";
+
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    localIP = ip.ToString();
+                    break;
+                }
+            }
+
+            return localIP;
         }
 
         private void startFbLogin()
@@ -144,7 +161,6 @@ namespace CryptoFbChat
 
         private void buttonStartStreaming_Click(object sender, EventArgs e)
         {
-            // Utilities.Web.WebBrowserHelper.WebBrowserHelper.ClearCache();
             if (!connected)
             {
                 #region Preparing
@@ -366,7 +382,7 @@ namespace CryptoFbChat
                 {
                     byte[] b = udpListener.Receive(ref endPoint);
 
-                    string roundtrip = DecryptStringFromBytes(b, myRijndael.Key, myRijndael.IV);
+                    string roundtrip = DecryptBytes(myRijndael, b);//DecryptStringFromBytes(b, myRijndael.Key, myRijndael.IV);
                     byte[] decrypted = Encoding.Unicode.GetBytes(roundtrip);
 
                     if (listenerThreadState.Codec != null)
@@ -381,6 +397,23 @@ namespace CryptoFbChat
             catch (SocketException)
             {
             }
+        }
+
+        public static byte[] EncryptString(SymmetricAlgorithm symAlg, string inString)
+        {
+            byte[] inBlock = UnicodeEncoding.Unicode.GetBytes(inString);
+            ICryptoTransform xfrm = symAlg.CreateEncryptor();
+            byte[] outBlock = xfrm.TransformFinalBlock(inBlock, 0, inBlock.Length);
+
+            return outBlock;
+        }
+
+        public static string DecryptBytes(SymmetricAlgorithm symAlg, byte[] inBytes)
+        {
+            ICryptoTransform xfrm = symAlg.CreateDecryptor();
+            byte[] outBlock = xfrm.TransformFinalBlock(inBytes, 0, inBytes.Length);
+
+            return UnicodeEncoding.Unicode.GetString(outBlock);
         }
 
         private byte[] EncryptStringToBytes(string plainText, byte[] Key, byte[] IV)
@@ -459,7 +492,7 @@ namespace CryptoFbChat
                 encoded = selectedCodec.Encode(e.Buffer, 0, e.BytesRecorded);
 
             string s = Encoding.Unicode.GetString(encoded);
-            byte[] encrypted = EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
+            byte[] encrypted = EncryptString(myRijndael, s);// EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
 
             for (int i = 0; i < senders.Count(); i++)
             {
