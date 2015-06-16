@@ -66,10 +66,31 @@
     <Compile Include="NetworkChatDemo\ALawChatCodec.cs" />
     <Compile Include="NetworkChatDemo\INetworkChatCodec.cs" />
     <Compile Include="NetworkChatDemo\MuLawChatCodec.cs" />
+    <Compile Include="Plugin\AudioPlaybackPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Plugin\AudioPlaybackPanel.Designer.cs">
+      <DependentUpon>AudioPlaybackPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plugin\AudioPlaybackPanelPlugin.cs" />
+    <Compile Include="Plugin\IOutputDevicePlugin.cs" />
+    <Compile Include="Plugin\WaveOutPlugin.cs" />
+    <Compile Include="Plugin\WaveOutSettingsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Plugin\WaveOutSettingsPanel.Designer.cs">
+      <DependentUpon>WaveOutSettingsPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plugin\AudioPlaybackPanel.resx">
+      <DependentUpon>AudioPlaybackPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plugin\WaveOutSettingsPanel.resx">
+      <DependentUpon>WaveOutSettingsPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

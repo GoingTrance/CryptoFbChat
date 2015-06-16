@@ -41,6 +41,7 @@
             this.comboBoxCodecs = new System.Windows.Forms.ComboBox();
             this.comboBoxInputDevices = new System.Windows.Forms.ComboBox();
             this.bufferIndicator = new System.Windows.Forms.ProgressBar();
+            this.audioStreamWave = new NAudio.Gui.WaveformPainter();
             this.SuspendLayout();
             // 
             // listBoxMembers
@@ -161,17 +162,31 @@
             // 
             // bufferIndicator
             // 
-            this.bufferIndicator.Location = new System.Drawing.Point(50, 285);
+            this.bufferIndicator.Location = new System.Drawing.Point(23, 289);
             this.bufferIndicator.Name = "bufferIndicator";
             this.bufferIndicator.Size = new System.Drawing.Size(258, 23);
             this.bufferIndicator.TabIndex = 40;
             this.bufferIndicator.Visible = false;
             // 
+            // audioStreamWave
+            // 
+            this.audioStreamWave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.audioStreamWave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.audioStreamWave.ForeColor = System.Drawing.Color.SaddleBrown;
+            this.audioStreamWave.Location = new System.Drawing.Point(23, 213);
+            this.audioStreamWave.Name = "audioStreamWave";
+            this.audioStreamWave.Size = new System.Drawing.Size(256, 60);
+            this.audioStreamWave.TabIndex = 41;
+            this.audioStreamWave.Text = "waveformPainter1";
+            this.audioStreamWave.Visible = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(444, 333);
+            this.ClientSize = new System.Drawing.Size(444, 473);
+            this.Controls.Add(this.audioStreamWave);
             this.Controls.Add(this.bufferIndicator);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
@@ -211,6 +226,7 @@
         private System.Windows.Forms.ComboBox comboBoxCodecs;
         private System.Windows.Forms.ComboBox comboBoxInputDevices;
         private System.Windows.Forms.ProgressBar bufferIndicator;
+        private NAudio.Gui.WaveformPainter audioStreamWave;
     }
 }
 
