@@ -35,7 +35,7 @@ namespace CryptoFbChat
         Dictionary<int, IPEndPoint> threadMappings = new Dictionary<int, IPEndPoint>();
         RSACryptoServiceProvider myouRSA = new RSACryptoServiceProvider();
         int inputDeviceNumber;
-
+        //check correct github name
         public MainForm()
         {
             InitializeComponent();
