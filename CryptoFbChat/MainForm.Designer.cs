@@ -108,7 +108,7 @@
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
             this.webBrowser1.ScrollBarsEnabled = false;
-            this.webBrowser1.Size = new System.Drawing.Size(337, 229);
+            this.webBrowser1.Size = new System.Drawing.Size(337, 255);
             this.webBrowser1.TabIndex = 33;
             this.webBrowser1.Navigated += new System.Windows.Forms.WebBrowserNavigatedEventHandler(this.webBrowser1_Navigated);
             // 
@@ -162,7 +162,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(503, 279);
+            this.ClientSize = new System.Drawing.Size(361, 279);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
             this.Controls.Add(this.label9);
@@ -176,7 +176,7 @@
             this.Controls.Add(this.comboBoxCodecs);
             this.Controls.Add(this.comboBoxInputDevices);
             this.Name = "MainForm";
-            this.Text = "Form1";
+            this.Text = "CryptoFbChat";
             this.ResumeLayout(false);
             this.PerformLayout();
 

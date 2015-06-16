@@ -270,7 +270,7 @@ namespace CryptoFbChat
                         remoteClient.Close();
                     }
 
-                    tt.Stop();                    
+                    tt.Stop();
                 }
 
                 inputDeviceNumber = comboBoxInputDevices.SelectedIndex;
@@ -283,8 +283,7 @@ namespace CryptoFbChat
                     waveIn.WaveFormat = selectedCodec.RecordFormat;
                 else
                     waveIn.WaveFormat = new WaveFormat(8000, 16, 1);
-                waveIn.DataAvailable += waveIn_DataAvailable;
-                waveIn.StartRecording();
+
 
                 udpListener = new UdpClient();
                 udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -293,23 +292,26 @@ namespace CryptoFbChat
                 senders = new UdpClient[allMembers.Count];
                 connected = true;
 
+                waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
+                waveProvider = new BufferedWaveProvider(waveIn.WaveFormat);
+                waveProvider.DiscardOnBufferOverflow = true;
+                waveOut.Init(waveProvider);
+                waveOut.Play();
+
                 for (int i = 0; i < allMembers.Count; i++)
                 {
                     senders[i] = new UdpClient();
                     senders[i].Connect(allMembers[i]);
+                }
 
-                    //Thread connectToMemberAsync = new Thread(ConnectOneMemberAsync);
-                    //threadMappings.Add(connectToMemberAsync.ManagedThreadId, allMembers[i]);
-                    //connectToMemberAsync.Start();
+                waveIn.DataAvailable += waveIn_DataAvailable;
+                waveIn.StartRecording();
 
+                for (int i = 0; i < allMembers.Count; i++)
+                {
                     var state = new ListenerThreadState { Codec = selectedCodec, EndPoint = allMembers[i] };
                     ThreadPool.QueueUserWorkItem(ListenerThread, state);
-                }                
-
-                waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
-                waveProvider = new BufferedWaveProvider(waveIn.WaveFormat);
-                waveOut.Init(waveProvider);
-                waveOut.Play();
+                }
 
                 buttonStartStreaming.Text = "Disconnect";
                 label7.Visible = true;
@@ -323,30 +325,6 @@ namespace CryptoFbChat
                 listBoxMembers.Items.Clear();
                 listBoxMembers.Visible = true;
             }
-        }        
-
-        private void ConnectOneMemberAsync()
-        {
-            IPEndPoint currentMemberIp = threadMappings[Thread.CurrentThread.ManagedThreadId];
-            Connect(currentMemberIp, selectedCodec);
-        }
-
-        private void Connect(IPEndPoint endPoint, INetworkChatCodec codec)
-        {
-            //udpListener.Receive(ref endPoint);
-
-            //udpSender = new UdpClient();
-            //udpSender.Connect(endPoint);
-
-            
-
-            
-        }
-
-        private void StartReceiving(IPEndPoint endPoint)
-        {
-            udpListener.Receive(ref endPoint);
-
         }
 
         private void Disconnect()
@@ -446,15 +424,24 @@ namespace CryptoFbChat
 
             ICryptoTransform decryptor = myRijndael.CreateDecryptor(myRijndael.Key, myRijndael.IV);
 
-            using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+            try
             {
-                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
                 {
-                    using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                     {
-                        plaintext = srDecrypt.ReadToEnd();
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            plaintext = srDecrypt.ReadToEnd();
+
+                        }
                     }
                 }
+            }
+            catch (Exception)
+            {
+                plaintext = "";
             }
 
             return plaintext;
