@@ -271,6 +271,9 @@ namespace CryptoFbChat
                     byte[] youBytes = new byte[128];
                     stream.Read(youBytes, 0, 128);
                     myRijndael.Key = myouRSA.Decrypt(youBytes, true);
+                    stream.Read(youBytes, 0, 128);
+                    myRijndael.IV = myouRSA.Decrypt(youBytes, true);
+
                     connectionToAdmin.Close();
                 }
                 else
@@ -286,6 +289,8 @@ namespace CryptoFbChat
                         myouRSA.ImportParameters(remoteParams);
                         byte[] encryptedByRsaAesKey = myouRSA.Encrypt(myRijndael.Key, true);
                         remoteClient.Client.Send(encryptedByRsaAesKey);
+                        byte[] encryptedByRsaAesIV = myouRSA.Encrypt(myRijndael.IV, true);
+                        remoteClient.Client.Send(encryptedByRsaAesIV);
                         remoteClient.Close();
                     }
 
