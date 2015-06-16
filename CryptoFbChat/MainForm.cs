@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
@@ -20,7 +21,7 @@ namespace CryptoFbChat
     public partial class MainForm : Form
     {
         private string myLocalIp;
-        private WaveInEvent waveIn;
+        private WaveIn waveIn;
         private IWavePlayer waveOut;
         private BufferedWaveProvider waveProvider;
         private UdpClient[] senders;
@@ -35,7 +36,7 @@ namespace CryptoFbChat
         Dictionary<int, IPEndPoint> threadMappings = new Dictionary<int, IPEndPoint>();
         RSACryptoServiceProvider myouRSA = new RSACryptoServiceProvider();
         int inputDeviceNumber;
-        //check correct github name
+
         public MainForm()
         {
             InitializeComponent();
@@ -59,10 +60,7 @@ namespace CryptoFbChat
             foreach (IPAddress ip in host.AddressList)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
                     localIP = ip.ToString();
-                    break;
-                }
             }
 
             return localIP;
@@ -168,7 +166,7 @@ namespace CryptoFbChat
             {
                 #region Preparing
                 bufferIndicator.Visible = true;
-             
+
                 // Check group access
                 var fb = new FacebookClient();
                 fb.AccessToken = myAccessToken;
@@ -245,10 +243,10 @@ namespace CryptoFbChat
                 List<IPEndPoint> allMembers = new List<IPEndPoint>();
                 foreach (var item in mappings)
                 {
-                    if (item.Key != myFbID)
+                    if (item.Key != myFbID && item.Value != "192.168.1.4")
                         allMembers.Add(new IPEndPoint(IPAddress.Parse(item.Value), 7080));
                 }
-
+                
                 if (isAdmin)
                 {
                     myRijndael.GenerateKey();
@@ -297,15 +295,17 @@ namespace CryptoFbChat
                 inputDeviceNumber = comboBoxInputDevices.SelectedIndex;
                 selectedCodec = ((CodecComboItem)comboBoxCodecs.SelectedItem).Codec;
 
-                waveIn = new WaveInEvent();
+                waveIn = new WaveIn();
                 waveIn.BufferMilliseconds = 50;
                 waveIn.DeviceNumber = inputDeviceNumber;
+                waveIn.DataAvailable += waveIn_DataAvailable;
+                waveIn.StartRecording();
+
                 if (selectedCodec != null)
                     waveIn.WaveFormat = selectedCodec.RecordFormat;
                 else
                     waveIn.WaveFormat = new WaveFormat(8000, 16, 1);
-
-
+                
                 udpListener = new UdpClient();
                 udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpListener.Client.Bind(new IPEndPoint(IPAddress.Parse(myLocalIp), 7080));
@@ -313,7 +313,7 @@ namespace CryptoFbChat
                 senders = new UdpClient[allMembers.Count];
                 connected = true;
 
-                waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
+                waveOut = new WaveOut();
                 waveProvider = new BufferedWaveProvider(waveIn.WaveFormat);
                 waveProvider.DiscardOnBufferOverflow = true;
                 waveOut.Init(waveProvider);
@@ -324,9 +324,6 @@ namespace CryptoFbChat
                     senders[i] = new UdpClient();
                     senders[i].Connect(allMembers[i]);
                 }
-
-                waveIn.DataAvailable += waveIn_DataAvailable;
-                waveIn.StartRecording();
 
                 for (int i = 0; i < allMembers.Count; i++)
                 {
@@ -383,8 +380,8 @@ namespace CryptoFbChat
                 {
                     byte[] b = udpListener.Receive(ref endPoint);
 
-                    string roundtrip = DecryptBytes(myRijndael, b);//DecryptStringFromBytes(b, myRijndael.Key, myRijndael.IV);
-                    byte[] decrypted = Encoding.Unicode.GetBytes(roundtrip);
+                    byte[] decrypted = Decrypt2(myRijndael, b);//DecryptStringFromBytes(b, myRijndael.Key, myRijndael.IV);
+                    //byte[] decrypted = Encoding.Unicode.GetBytes(roundtrip);
 
                     if (listenerThreadState.Codec != null)
                     {
@@ -401,21 +398,21 @@ namespace CryptoFbChat
             }
         }
 
-        public static byte[] EncryptString(SymmetricAlgorithm symAlg, string inString)
+        public static byte[] Encrypt1(SymmetricAlgorithm symAlg, byte[] inBlock)
         {
-            byte[] inBlock = UnicodeEncoding.Unicode.GetBytes(inString);
+            //byte[] inBlock = UnicodeEncoding.Unicode.GetBytes(inString);
             ICryptoTransform xfrm = symAlg.CreateEncryptor();
             byte[] outBlock = xfrm.TransformFinalBlock(inBlock, 0, inBlock.Length);
 
             return outBlock;
         }
 
-        public static string DecryptBytes(SymmetricAlgorithm symAlg, byte[] inBytes)
+        public static byte[] Decrypt2(SymmetricAlgorithm symAlg, byte[] inBytes)
         {
             ICryptoTransform xfrm = symAlg.CreateDecryptor();
             byte[] outBlock = xfrm.TransformFinalBlock(inBytes, 0, inBytes.Length);
 
-            return UnicodeEncoding.Unicode.GetString(outBlock);
+            return outBlock;
         }
 
         private byte[] EncryptStringToBytes(string plainText, byte[] Key, byte[] IV)
@@ -493,12 +490,12 @@ namespace CryptoFbChat
             else
                 encoded = selectedCodec.Encode(e.Buffer, 0, e.BytesRecorded);
 
-            string s = Encoding.Unicode.GetString(encoded);
-            byte[] encrypted = EncryptString(myRijndael, s);// EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
+            //string s = Encoding.Unicode.GetString(encoded);
+            byte[] encrypted = Encrypt1(myRijndael, encoded);// EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
 
             for (int i = 0; i < senders.Count(); i++)
             {
-                senders[i].Send(encrypted, encrypted.Count());
+                senders[i].Send(encrypted, encrypted.Length);
             }
         }
     }
