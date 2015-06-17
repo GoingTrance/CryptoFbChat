@@ -401,6 +401,16 @@ namespace CryptoFbChat
                 {
                     byte[] b = udpListener.Receive(ref endPoint);
                     byte[] decrypted = Decrypt2(myRijndael, b);
+                    
+                    if(senders.Length > 2)
+                    {
+                        byte[] smalldec = new byte[decrypted.Length / 2];
+                        for (int i = 0; i < smalldec.Length; i++)
+                        {
+                            smalldec[i] = decrypted[i * 2];
+                        }
+                        decrypted = smalldec;
+                    }
 
                     if (listenerThreadState.Codec != null)
                     {
