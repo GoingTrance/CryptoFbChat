@@ -252,7 +252,7 @@ namespace CryptoFbChat
                 List<IPEndPoint> allMembers = new List<IPEndPoint>();
                 foreach (var item in mappings)
                 {
-                    if (item.Key != myFbID)
+                    if (item.Key != myFbID && item.Key != "1409151726080081")
                         allMembers.Add(new IPEndPoint(IPAddress.Parse(item.Value), 7080));
                 }
                 
