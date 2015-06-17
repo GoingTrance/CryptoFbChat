@@ -162,11 +162,12 @@ namespace CryptoFbChat
             listBoxMembers.Visible = true;
             label7.Visible = true;
             myLocalIp = (string)comboBoxIp.SelectedItem;
-
+            
             if (!connected)
             {
                 #region Preparing
                 bufferIndicator.Visible = true;
+                label2.Visible = true;
 
                 // Check group access
                 var fb = new FacebookClient();
@@ -337,6 +338,8 @@ namespace CryptoFbChat
                     ThreadPool.QueueUserWorkItem(ListenerThread, state);
                 }
 
+                timerBuffer.Start();
+
                 buttonStartStreaming.Text = "Disconnect";
             }
             else
@@ -394,11 +397,7 @@ namespace CryptoFbChat
 
                     if (listenerThreadState.Codec != null)
                     {
-                        byte[] decoded = listenerThreadState.Codec.Decode(decrypted, 0, decrypted.Length);
-                        lock(this)
-                        {
-                            UpdateBuffer();
-                        }
+                        byte[] decoded = listenerThreadState.Codec.Decode(decrypted, 0, decrypted.Length);                        
                         waveProvider.AddSamples(decoded, 0, decoded.Length);
                     }
                     else
@@ -505,6 +504,11 @@ namespace CryptoFbChat
             {
                 senders[i].Send(encrypted, encrypted.Length);
             }
+        }
+
+        private void timerBuffer_Tick(object sender, EventArgs e)
+        {
+            UpdateBuffer();
         }
     }
 }

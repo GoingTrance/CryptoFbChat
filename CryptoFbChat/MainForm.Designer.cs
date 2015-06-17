@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.listBoxMembers = new System.Windows.Forms.ListBox();
             this.textBoxGroupID = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
@@ -43,6 +44,8 @@
             this.bufferIndicator = new System.Windows.Forms.ProgressBar();
             this.comboBoxIp = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.timerBuffer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // listBoxMembers
@@ -190,11 +193,28 @@
             this.label1.Text = "IP address";
             this.label1.Visible = false;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label2.Location = new System.Drawing.Point(19, 246);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(99, 19);
+            this.label2.TabIndex = 43;
+            this.label2.Text = "Buffer State";
+            this.label2.Visible = false;
+            // 
+            // timerBuffer
+            // 
+            this.timerBuffer.Interval = 200;
+            this.timerBuffer.Tick += new System.EventHandler(this.timerBuffer_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(444, 332);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboBoxIp);
             this.Controls.Add(this.bufferIndicator);
@@ -238,6 +258,8 @@
         private System.Windows.Forms.ProgressBar bufferIndicator;
         private System.Windows.Forms.ComboBox comboBoxIp;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Timer timerBuffer;
     }
 }
 
