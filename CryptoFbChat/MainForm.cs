@@ -339,11 +339,11 @@ namespace CryptoFbChat
                 }
 
                 timerBuffer.Start();
-
                 buttonStartStreaming.Text = "Disconnect";
             }
             else
             {
+                timerBuffer.Stop();
                 Disconnect();
                 buttonStartStreaming.Text = "Connect";
                 listBoxMembers.Items.Clear();
