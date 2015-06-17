@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -53,6 +54,10 @@ namespace CryptoFbChat
 
         public void GetLocalIPAddresses()
         {
+            string externalIP = (new WebClient()).DownloadString("http://checkip.dyndns.org/");
+            externalIP = (new Regex(@"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"))
+                         .Matches(externalIP)[0].ToString();
+
             IPHostEntry host;
 
             host = Dns.GetHostEntry(Dns.GetHostName());
@@ -61,6 +66,8 @@ namespace CryptoFbChat
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                     comboBoxIp.Items.Add(ip.ToString());
             }
+
+            comboBoxIp.Items.Add(externalIP);
         }
 
         private void startFbLogin()
@@ -192,7 +199,7 @@ namespace CryptoFbChat
                 // Get the table ip addresses of group members
 
                 // Get my external ip
-                string myExtIp = myLocalIp;//new System.Net.WebClient().DownloadString("http://bot.whatismyipaddress.com");
+                string myExtIp = myLocalIp;
 
                 // Get public key to encrypt token
                 HttpWebRequest getPublicKeyRequest = (HttpWebRequest)WebRequest.Create("http://cryptochatservice.apphb.com/");
