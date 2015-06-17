@@ -376,6 +376,11 @@ namespace CryptoFbChat
             public INetworkChatCodec Codec { get; set; }
         }
 
+        private void UpdateBuffer()
+        {
+            bufferIndicator.Value = 100 * waveProvider.BufferedBytes / waveProvider.BufferLength;
+        }
+
         private void ListenerThread(object state)
         {
             var listenerThreadState = (ListenerThreadState)state;
@@ -390,7 +395,10 @@ namespace CryptoFbChat
                     if (listenerThreadState.Codec != null)
                     {
                         byte[] decoded = listenerThreadState.Codec.Decode(decrypted, 0, decrypted.Length);
-                        bufferIndicator.Value = 100 / waveProvider.BufferLength * waveProvider.BufferedBytes;
+                        lock(this)
+                        {
+                            UpdateBuffer();
+                        }
                         waveProvider.AddSamples(decoded, 0, decoded.Length);
                     }
                     else
