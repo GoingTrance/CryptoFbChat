@@ -41,6 +41,8 @@
             this.comboBoxCodecs = new System.Windows.Forms.ComboBox();
             this.comboBoxInputDevices = new System.Windows.Forms.ComboBox();
             this.bufferIndicator = new System.Windows.Forms.ProgressBar();
+            this.comboBoxIp = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // listBoxMembers
@@ -133,11 +135,11 @@
             // 
             // buttonStartStreaming
             // 
-            this.buttonStartStreaming.Location = new System.Drawing.Point(53, 149);
+            this.buttonStartStreaming.Location = new System.Drawing.Point(53, 173);
             this.buttonStartStreaming.Name = "buttonStartStreaming";
             this.buttonStartStreaming.Size = new System.Drawing.Size(129, 23);
             this.buttonStartStreaming.TabIndex = 30;
-            this.buttonStartStreaming.Text = "Start Streaming";
+            this.buttonStartStreaming.Text = "Connect";
             this.buttonStartStreaming.UseVisualStyleBackColor = true;
             this.buttonStartStreaming.Click += new System.EventHandler(this.buttonStartStreaming_Click);
             // 
@@ -167,11 +169,34 @@
             this.bufferIndicator.TabIndex = 40;
             this.bufferIndicator.Visible = false;
             // 
+            // comboBoxIp
+            // 
+            this.comboBoxIp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxIp.FormattingEnabled = true;
+            this.comboBoxIp.Location = new System.Drawing.Point(83, 132);
+            this.comboBoxIp.Name = "comboBoxIp";
+            this.comboBoxIp.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxIp.TabIndex = 41;
+            this.comboBoxIp.Visible = false;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label1.Location = new System.Drawing.Point(7, 134);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(67, 15);
+            this.label1.TabIndex = 42;
+            this.label1.Text = "IP address";
+            this.label1.Visible = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(444, 332);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboBoxIp);
             this.Controls.Add(this.bufferIndicator);
             this.Controls.Add(this.listBoxMembers);
             this.Controls.Add(this.textBoxGroupID);
@@ -211,6 +236,8 @@
         private System.Windows.Forms.ComboBox comboBoxCodecs;
         private System.Windows.Forms.ComboBox comboBoxInputDevices;
         private System.Windows.Forms.ProgressBar bufferIndicator;
+        private System.Windows.Forms.ComboBox comboBoxIp;
+        private System.Windows.Forms.Label label1;
     }
 }
 

@@ -41,7 +41,7 @@ namespace CryptoFbChat
         {
             InitializeComponent();
             PopulateInputDevicesCombo();
-            myLocalIp = GetLocalIPAddress();
+            GetLocalIPAddresses();            
             List<INetworkChatCodec> codecs = new List<INetworkChatCodec>();
             codecs.Add(new ALawChatCodec());
             codecs.Add(new MuLawChatCodec());
@@ -51,19 +51,16 @@ namespace CryptoFbChat
             listBoxMembers.Items.Clear();
         }
 
-        public string GetLocalIPAddress()
+        public void GetLocalIPAddresses()
         {
             IPHostEntry host;
-            string localIP = "";
 
             host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (IPAddress ip in host.AddressList)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    localIP = ip.ToString();
+                    comboBoxIp.Items.Add(ip.ToString());
             }
-
-            return localIP;
         }
 
         private void startFbLogin()
@@ -107,6 +104,9 @@ namespace CryptoFbChat
                 }
                 webBrowser1.Stop();
                 webBrowser1.Hide();
+
+                comboBoxIp.Visible = true;
+                label1.Visible = true;
             }
         }
 
@@ -161,6 +161,7 @@ namespace CryptoFbChat
         {
             listBoxMembers.Visible = true;
             label7.Visible = true;
+            myLocalIp = (string)comboBoxIp.SelectedItem;
 
             if (!connected)
             {
@@ -243,7 +244,7 @@ namespace CryptoFbChat
                 List<IPEndPoint> allMembers = new List<IPEndPoint>();
                 foreach (var item in mappings)
                 {
-                    if (item.Key != myFbID && item.Value != "192.168.1.4")
+                    if (item.Key != myFbID)
                         allMembers.Add(new IPEndPoint(IPAddress.Parse(item.Value), 7080));
                 }
                 
@@ -384,9 +385,7 @@ namespace CryptoFbChat
                 while (connected)
                 {
                     byte[] b = udpListener.Receive(ref endPoint);
-
-                    byte[] decrypted = Decrypt2(myRijndael, b);//DecryptStringFromBytes(b, myRijndael.Key, myRijndael.IV);
-                    //byte[] decrypted = Encoding.Unicode.GetBytes(roundtrip);
+                    byte[] decrypted = Decrypt2(myRijndael, b);
 
                     if (listenerThreadState.Codec != null)
                     {
@@ -405,10 +404,8 @@ namespace CryptoFbChat
 
         public static byte[] Encrypt1(SymmetricAlgorithm symAlg, byte[] inBlock)
         {
-            //byte[] inBlock = UnicodeEncoding.Unicode.GetBytes(inString);
             ICryptoTransform xfrm = symAlg.CreateEncryptor();
             byte[] outBlock = xfrm.TransformFinalBlock(inBlock, 0, inBlock.Length);
-
             return outBlock;
         }
 
@@ -416,7 +413,6 @@ namespace CryptoFbChat
         {
             ICryptoTransform xfrm = symAlg.CreateDecryptor();
             byte[] outBlock = xfrm.TransformFinalBlock(inBytes, 0, inBytes.Length);
-
             return outBlock;
         }
 
@@ -495,8 +491,7 @@ namespace CryptoFbChat
             else
                 encoded = selectedCodec.Encode(e.Buffer, 0, e.BytesRecorded);
 
-            //string s = Encoding.Unicode.GetString(encoded);
-            byte[] encrypted = Encrypt1(myRijndael, encoded);// EncryptStringToBytes(s, myRijndael.Key, myRijndael.IV);
+            byte[] encrypted = Encrypt1(myRijndael, encoded);
 
             for (int i = 0; i < senders.Count(); i++)
             {
